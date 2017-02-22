@@ -35,14 +35,14 @@ typedef struct Message Message;
 int main(void)
 {
     struct sockaddr_in si_me, si_other;
-    int s, i, slen=sizeof(si_other);
+    int s, slen=sizeof(si_other);
     Message buf;
     Message monMessage;
      int k=0;
 
     if ( (s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
     {
-        die("socket");
+        die((char*)"socket");
     }
 
     memset((char *) &si_other, 0, sizeof(si_other));
@@ -68,7 +68,7 @@ int main(void)
 //bind socket to port
    while (bind(s , (struct sockaddr*)&si_me, sizeof(si_me) ) == -1) {
         si_me.sin_port = htons(48000 +k);
-//        si_me.sin_addr.s_addr = htonl(48000 +K);
+//        si_me.sin_addr.s_addr = htonl(48000 +k);
         k=k+100;
     }
 
@@ -77,27 +77,56 @@ int main(void)
 
     while(1)
     {
+        /*memset(monMessage.message,'\0', BUFLEN);
+        fflush(stdout);
+        if (recvfrom(s, &buf, sizeof(monMessage), 0, (struct sockaddr *) &si_other, (socklen_t*)&slen) == -1)
+        {
+            die((char*)"recvfrom()");
+        }
+        else{
+        printf("Received packet from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
+        printf("hi\n" );
+        printf("Data: %s\n" , monMessage.message);
+        }
+*/
         printf("Enter message : ");
         //gets(&monMessage.message);
-        scanf("%s\n",&monMessage.message );
-        printf("%s\n",monMessage.message );
+        //scanf("%s", monMessage.message );
+        fgets(monMessage.message, BUFLEN, stdin);
+        printf("%s\n", monMessage.message );
         //send the message
-        if (sendto(s, &monMessage, sizeof(Message) , 0 , (struct sockaddr *) &si_other, slen)==-1)
+        if (sendto(s, &monMessage, sizeof(Message) , 0 , (const struct sockaddr *) &si_other, slen)==-1)
         {
-            die("sendto()");
+            die((char*)"sendto()");
         }
         printf("hi\n" );
         //receive a reply and print it
         //clear the buffer by filling null, it might have previously received data
-        memset(buf.message,'\0', BUFLEN);
+        memset(monMessage.message,'\0', BUFLEN);
+        fflush(stdout);
         //memset(&buf.timestamp,'\0', BUFLEN);
         //try to receive some data, this is a blocking call
-        if (recvfrom(s, &buf, sizeof(monMessage), 0, (struct sockaddr *) &si_other, &slen) == -1)
+    /*    if (recvfrom(s, &buf, sizeof(Message), 0, (struct sockaddr *) &si_other, &slen) == -1)
         {
+
             die("recvfrom()");
+            printf("ho\n" );
         }
+    */
+    if (recvfrom(s,&monMessage, sizeof(Message), 0, (struct sockaddr *) &si_other, (socklen_t*)&slen) == -1)
+    {
+        die((char*)"recvfrom()");
         printf("ho\n" );
-        printf("%s\n",buf.message);
+    }
+    else{
+    printf("Received packet from %s:%d\n", inet_ntoa(si_other.sin_addr), ntohs(si_other.sin_port));
+    printf("hi\n" );
+    printf("Data: %s\n" , monMessage.message);
+    }
+
+
+
+    //    printf("%s\n",buf.message);
         //printf("%llu\n",buf.timestamp);
         //puts(buf.message);
         //puts(buf.timestamp);
